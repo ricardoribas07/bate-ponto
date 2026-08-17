@@ -1,0 +1,541 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --graphite: #262924;
+  --graphite-2: #32362f;
+  --steel: #7c8b85;
+  --paper: #f2ead2;
+  --paper-2: #e8dfc2;
+  --ink: #1c1a14;
+  --stamp-green: #3e6b4f;
+  --stamp-red: #a83a2c;
+  --brass: #b9822f;
+  --line: rgba(28, 26, 20, 0.16);
+  --font-display: 'IBM Plex Mono', monospace;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--graphite);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font-family: inherit; cursor: pointer; }
+a { color: inherit; }
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- TOPBAR (corpo metálico do relógio de ponto) ---------- */
+.topbar {
+  background: var(--graphite-2);
+  border-bottom: 3px solid var(--brass);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--paper);
+}
+
+.topbar__brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.topbar__brand b {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.5px;
+}
+
+.topbar__brand span {
+  color: var(--steel);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.topbar__clock {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  letter-spacing: 2px;
+  background: var(--ink);
+  color: #f2c94c;
+  padding: 4px 14px;
+  border-radius: 3px;
+  border: 1px solid #000;
+}
+
+.topbar__user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--steel);
+}
+
+.topbar__logout {
+  background: transparent;
+  border: 1px solid var(--steel);
+  color: var(--paper);
+  padding: 6px 12px;
+  border-radius: 3px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.topbar__logout:hover { border-color: var(--brass); color: var(--brass); }
+
+/* ---------- MAIN ---------- */
+.main {
+  flex: 1;
+  padding: 32px;
+  max-width: 1180px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  color: var(--paper);
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0 0 18px 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-title::before {
+  content: '';
+  width: 8px; height: 8px;
+  background: var(--brass);
+  display: inline-block;
+}
+
+/* ---------- CARTÃO DE PONTO (time card) ---------- */
+.card {
+  background: var(--paper);
+  border-radius: 4px;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 14px;
+  background-image: radial-gradient(circle, var(--graphite) 3.5px, transparent 3.6px);
+  background-size: 20px 14px;
+  background-position: 8px 0;
+  background-repeat: repeat-x;
+}
+
+.card__inner {
+  padding: 26px 22px 20px;
+}
+
+/* ---------- GRID DE SALAS ---------- */
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.room-card {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.room-card:hover { transform: translateY(-3px); }
+
+.room-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.room-card__name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.room-card__subject {
+  font-size: 13px;
+  color: #52503f;
+  margin: 2px 0 14px;
+}
+
+.room-card__teacher {
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.room-card__teacher b { font-weight: 600; }
+
+.room-card__stats {
+  display: flex;
+  gap: 14px;
+  font-family: var(--font-mono);
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+}
+.stat { text-align: center; flex: 1; }
+.stat__n { font-size: 20px; font-weight: 700; display: block; }
+.stat__l { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #6b6a5a; }
+.stat--presente .stat__n { color: var(--stamp-green); }
+.stat--atrasado .stat__n { color: var(--brass); }
+.stat--ausente .stat__n { color: var(--stamp-red); }
+
+/* ---------- CARIMBO (status) ---------- */
+.stamp {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  transform: rotate(-3deg);
+  display: inline-block;
+  white-space: nowrap;
+}
+.stamp--presente { color: var(--stamp-green); }
+.stamp--atrasado { color: var(--brass); }
+.stamp--ausente,
+.stamp--negado { color: var(--stamp-red); }
+.stamp--aguardando { color: var(--steel); border-style: dashed; }
+
+/* ---------- TABELA / LEDGER ---------- */
+.ledger { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ledger th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #6b6a5a;
+  border-bottom: 2px solid var(--ink);
+  padding: 8px 10px;
+}
+.ledger td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+}
+.ledger tr:last-child td { border-bottom: none; }
+
+/* ---------- ALERTAS ---------- */
+.alert {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-left: 4px solid var(--stamp-red);
+  background: rgba(168, 58, 44, 0.08);
+  border-radius: 3px;
+  margin-bottom: 10px;
+  color: var(--paper);
+}
+.alert--media { border-left-color: var(--brass); background: rgba(185, 130, 47, 0.1); }
+.alert__tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.alert p { margin: 2px 0 0; font-size: 14px; color: #ded6bd; }
+.empty-note { color: var(--steel); font-size: 14px; padding: 6px 2px; }
+
+/* ---------- LOGIN ---------- */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.login-card { width: 100%; max-width: 380px; }
+.login-card .card__inner { padding-top: 32px; }
+.login-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+.login-sub { font-size: 13px; color: #52503f; margin: 0 0 24px; }
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #52503f;
+  margin-bottom: 6px;
+}
+.field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  background: #fffdf5;
+  font-size: 14px;
+  font-family: var(--font-mono);
+}
+.field input:focus {
+  outline: 2px solid var(--brass);
+  outline-offset: 1px;
+}
+.btn-primary {
+  width: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 12px;
+  border-radius: 3px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.btn-primary:hover { background: #000; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.form-error {
+  background: rgba(168,58,44,0.1);
+  border: 1px solid var(--stamp-red);
+  color: var(--stamp-red);
+  padding: 8px 10px;
+  border-radius: 3px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.login-hint {
+  margin-top: 18px;
+  font-size: 12px;
+  color: #6b6a5a;
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+  line-height: 1.6;
+}
+
+/* ---------- BACK LINK / TABS ---------- */
+.back-link {
+  background: none;
+  border: none;
+  color: var(--steel);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  padding: 0;
+}
+.back-link:hover { color: var(--brass); }
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.tab {
+  background: var(--graphite-2);
+  color: var(--steel);
+  border: 1px solid transparent;
+  padding: 8px 16px;
+  border-radius: 3px 3px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.tab.active { background: var(--paper); color: var(--ink); }
+
+.section-gap { margin-top: 28px; }
+
+/* ---------- CADASTROS (ADMIN) ---------- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.form-grid .field { margin-bottom: 0; }
+.form-grid select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  background: #fffdf5;
+  font-size: 14px;
+  font-family: var(--font-mono);
+}
+.form-actions { margin-top: 14px; display: flex; gap: 10px; align-items: center; }
+.form-actions .btn-primary { width: auto; padding: 10px 20px; }
+
+.delete-btn {
+  background: transparent;
+  border: 1px solid var(--stamp-red);
+  color: var(--stamp-red);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.delete-btn:hover { background: rgba(168, 58, 44, 0.12); }
+
+.subtle-btn {
+  background: var(--graphite-2);
+  color: var(--paper);
+  border: 1px solid var(--steel);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 7px 12px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.subtle-btn:hover { border-color: var(--brass); color: var(--brass); }
+.subtle-btn.active { background: var(--brass); color: var(--ink); border-color: var(--brass); }
+
+.role-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--steel);
+  color: #52503f;
+}
+
+.enroll-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+}
+.enroll-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.enroll-list { list-style: none; padding: 0; margin: 8px 0 0; }
+.enroll-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.enroll-list h4 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #6b6a5a;
+  margin: 0;
+}
+
+.room-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.room-detail-header h2 {
+  font-family: var(--font-display);
+  margin: 0 0 4px;
+}
+.room-detail-header p { margin: 0; color: #52503f; font-size: 14px; }
+
+.badge-count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--paper);
+  background: var(--graphite-2);
+  border: 1px solid var(--steel);
+  padding: 6px 12px;
+  border-radius: 3px;
+}
+
+.breaks-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.break-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: rgba(185, 130, 47, 0.15);
+  border: 1px solid var(--brass);
+  color: var(--paper);
+  padding: 6px 10px;
+  border-radius: 20px;
+}
+
+.select-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.select-row select, .select-row input {
+  font-family: var(--font-mono);
+  padding: 8px 10px;
+  border-radius: 3px;
+  border: 1px solid var(--ink);
+  background: #fffdf5;
+}
+.print-btn {
+  background: var(--brass);
+  color: var(--ink);
+  border: none;
+  padding: 9px 16px;
+  border-radius: 3px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.print-btn:hover { filter: brightness(1.08); }
+
+.loading, .error-box {
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 20px 2px;
+}
+.error-box { color: var(--stamp-red); }
+
+@media print {
+  .topbar, .back-link, .select-row, .print-btn { display: none !important; }
+  body { background: white; }
+  .card { box-shadow: none; }
+}
