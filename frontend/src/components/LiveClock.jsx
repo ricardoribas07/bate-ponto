@@ -9,5 +9,5 @@ export default function LiveClock() {
   }, []);
 
   const str = time.toLocaleTimeString('pt-BR', { hour12: false });
-  return <span className="topbar__clock">{str}</span>;
+  return <div className="sidebar__clock">{str}</div>;
 }

@@ -10,6 +10,12 @@ fs.mkdirSync(dataDir, { recursive: true });
 const url = process.env.TURSO_DATABASE_URL || `file:${path.join(dataDir, 'bateponto.db')}`;
 const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
 
+if (process.env.TURSO_DATABASE_URL) {
+  console.log(`[banco] Usando Turso (nuvem): ${process.env.TURSO_DATABASE_URL}`);
+} else {
+  console.log('[banco] TURSO_DATABASE_URL não foi definido — usando arquivo LOCAL (não persiste em hospedagem free).');
+}
+
 const client = createClient(authToken ? { url, authToken } : { url });
 
 // ---------- CAMADA DE ACESSO (mesma "forma" de uso de antes, só que assíncrona) ----------

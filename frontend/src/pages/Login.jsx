@@ -48,9 +48,11 @@ export default function Login({ onLogin }) {
             </button>
           </form>
 
-          <div className="login-hint">
-            Demo: coordenacao / admin123 &nbsp;·&nbsp; maria / 123456 &nbsp;·&nbsp; joao / 123456
-          </div>
+          {import.meta.env.DEV && (
+            <div className="login-hint">
+              Demo (local): coordenacao / admin123 &nbsp;·&nbsp; maria / 123456 &nbsp;·&nbsp; joao / 123456
+            </div>
+          )}
         </div>
       </div>
     </div>

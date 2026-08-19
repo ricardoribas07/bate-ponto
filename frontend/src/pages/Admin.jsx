@@ -11,6 +11,7 @@ function PeopleTab({ currentUser }) {
   const [form, setForm] = useState(EMPTY_PERSON);
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function load() {
@@ -21,6 +22,7 @@ function PeopleTab({ currentUser }) {
 
   function startEdit(p) {
     setEditingId(p.id);
+    setSuccess('');
     setForm({ card_id: p.card_id, name: p.name, role: p.role, registration: p.registration || '', login: p.login || '', password: '' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -34,13 +36,28 @@ function PeopleTab({ currentUser }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
     try {
+      const wasEditing = !!editingId;
+      const passwordChanged = wasEditing && form.password.trim().length > 0;
+
       if (editingId) {
         await api.updatePerson(editingId, form);
       } else {
         await api.createPerson(form);
       }
+
+      if (wasEditing) {
+        setSuccess(
+          form.role === 'aluno'
+            ? `Dados de ${form.name} atualizados.`
+            : passwordChanged
+              ? `Dados de ${form.name} atualizados — a senha FOI alterada.`
+              : `Dados de ${form.name} atualizados — a senha NÃO foi alterada (campo ficou em branco).`
+        );
+      }
+
       cancelEdit();
       load();
     } catch (err) {
@@ -75,6 +92,7 @@ function PeopleTab({ currentUser }) {
       <div className="card">
         <div className="card__inner">
           {error && <div className="form-error">{error}</div>}
+          {success && <div className="form-success">{success}</div>}
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
               <div className="field">
