@@ -5,8 +5,6 @@ const fs = require('fs');
 const dataDir = path.join(__dirname, 'data');
 fs.mkdirSync(dataDir, { recursive: true });
 
-// Se TURSO_DATABASE_URL estiver definido (produção/nuvem), conecta no banco remoto Turso.
-// Caso contrário (desenvolvimento local), usa um arquivo .db local — mesma coisa de sempre.
 const url = process.env.TURSO_DATABASE_URL || `file:${path.join(dataDir, 'bateponto.db')}`;
 const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
 
@@ -18,7 +16,6 @@ if (process.env.TURSO_DATABASE_URL) {
 
 const client = createClient(authToken ? { url, authToken } : { url });
 
-// ---------- CAMADA DE ACESSO (mesma "forma" de uso de antes, só que assíncrona) ----------
 const db = {
   async get(sql, args = []) {
     const rs = await client.execute({ sql, args });
@@ -41,7 +38,6 @@ const BREAK_LIMITS = {
   agua: 4 * 60,
 };
 
-// ---------- SCHEMA ----------
 async function createSchema() {
   await client.executeMultiple(`
     CREATE TABLE IF NOT EXISTS rooms (
@@ -94,9 +90,11 @@ async function createSchema() {
       person_id INTEGER NOT NULL REFERENCES people(id),
       room_id INTEGER NOT NULL REFERENCES rooms(id),
       type TEXT NOT NULL CHECK(type IN ('urinar','defecar','agua','garrafa')),
+      date TEXT,
       start_time TEXT NOT NULL,
       end_time TEXT,
-      limit_seconds INTEGER NOT NULL
+      limit_seconds INTEGER NOT NULL,
+      falta_aplicada INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS access_events (
@@ -110,15 +108,17 @@ async function createSchema() {
     );
   `);
 
-  // Migração para bancos criados antes da coluna "active" existir
-  try {
-    await client.execute("ALTER TABLE people ADD COLUMN active INTEGER NOT NULL DEFAULT 1;");
-  } catch (e) {
-    // coluna já existe — ignora
+  // Migrações (para bancos criados antes destas colunas existirem)
+  const migracoes = [
+    "ALTER TABLE people ADD COLUMN active INTEGER NOT NULL DEFAULT 1;",
+    "ALTER TABLE breaks ADD COLUMN date TEXT;",
+    "ALTER TABLE breaks ADD COLUMN falta_aplicada INTEGER NOT NULL DEFAULT 0;",
+  ];
+  for (const sql of migracoes) {
+    try { await client.execute(sql); } catch (e) { /* coluna já existe — ignora */ }
   }
 }
 
-// ---------- SEED (só roda se o banco estiver vazio) ----------
 async function seedIfEmpty() {
   const countRow = await db.get('SELECT COUNT(*) AS c FROM people');
   if (Number(countRow.c) > 0) return;
@@ -155,7 +155,10 @@ async function seedIfEmpty() {
     studentIds.push(r.lastInsertRowid);
   }
 
-  const weekday = new Date().getDay();
+  // Calcula o dia da semana de hoje em Brasília (sem importar utils.js aqui,
+  // pra evitar referência circular entre os dois arquivos)
+  const agoraBrasiliaSeed = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  const weekday = agoraBrasiliaSeed.getUTCDay();
 
   const sched101 = await db.run(
     `INSERT INTO schedules (room_id, person_id, subject, weekday, start_time, end_time, tolerance_minutes) VALUES (?,?,?,?,?,?,?)`,
@@ -180,7 +183,6 @@ async function initDb() {
   await seedIfEmpty();
 }
 
-// ---------- EXCLUSÃO EM CASCATA (agora como transações atômicas via batch) ----------
 async function deletePersonCascade(id) {
   await client.batch(
     [

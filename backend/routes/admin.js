@@ -2,8 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { db, deletePersonCascade, deleteRoomCascade, deleteScheduleCascade } = require('../db');
 
-// ==================== PESSOAS (alunos, professores, coordenação) ====================
-
 router.get('/people', async (req, res) => {
   try {
     const people = await db.all('SELECT id, card_id, name, role, registration, login, active FROM people ORDER BY role, name');
@@ -108,8 +106,6 @@ router.delete('/people/:id', async (req, res) => {
   }
 });
 
-// ==================== SALAS ====================
-
 router.get('/rooms', async (req, res) => {
   try {
     const rooms = await db.all('SELECT * FROM rooms ORDER BY name');
@@ -162,8 +158,6 @@ router.delete('/rooms/:id', async (req, res) => {
     res.status(500).json({ ok: false, error: 'Erro ao excluir: ' + e.message });
   }
 });
-
-// ==================== AULAS (horários) ====================
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
@@ -235,8 +229,6 @@ router.delete('/schedules/:id', async (req, res) => {
     res.status(500).json({ ok: false, error: 'Erro ao excluir: ' + e.message });
   }
 });
-
-// ---------- Matrícula de alunos na aula ----------
 
 router.get('/schedules/:id/students', async (req, res) => {
   try {

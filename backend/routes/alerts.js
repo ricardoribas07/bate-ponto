@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
-const { todayDateStr, timeToMinutes, nowMinutes, getActiveScheduleForRoom } = require('../utils');
+const { todayDateStr, timeToMinutes, nowMinutes, getActiveScheduleForRoom, brasiliaParaInstanteUTC } = require('../utils');
+const { reconciliarPausasVencidas } = require('../reconciliacao');
 
 router.get('/', async (req, res) => {
   try {
+    await reconciliarPausasVencidas();
+
     const alerts = [];
     const date = todayDateStr();
     const nm = nowMinutes();
@@ -32,6 +35,9 @@ router.get('/', async (req, res) => {
       }
     }
 
+    // Pausas estouradas (ainda em aberto agora, além do tempo limite) — a
+    // reconciliação já fechou as que "sobraram" de aulas que já terminaram,
+    // então o que aparece aqui são pausas de aulas que AINDA estão rolando.
     const openBreaks = await db.all(
       `SELECT b.*, p.name, r.name as room_name FROM breaks b
        JOIN people p ON p.id = b.person_id
@@ -39,10 +45,9 @@ router.get('/', async (req, res) => {
        WHERE b.end_time IS NULL`
     );
 
-    const now = new Date();
     for (const b of openBreaks) {
-      const start = new Date(`${todayDateStr()}T${b.start_time}`);
-      const elapsed = (now - start) / 1000;
+      const start = brasiliaParaInstanteUTC(b.date, b.start_time);
+      const elapsed = (Date.now() - start.getTime()) / 1000;
       if (elapsed > b.limit_seconds) {
         alerts.push({
           type: 'pausa_excedida',

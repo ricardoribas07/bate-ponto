@@ -7,6 +7,7 @@ const {
   nowMinutes,
   getActiveScheduleForRoom,
 } = require('../utils');
+const { reconciliarPausasVencidas } = require('../reconciliacao');
 
 async function buildRoomSummary(room) {
   const schedule = await getActiveScheduleForRoom(room.id);
@@ -68,6 +69,7 @@ async function buildRoomSummary(room) {
 
 router.get('/', async (req, res) => {
   try {
+    await reconciliarPausasVencidas();
     const rooms = await db.all('SELECT * FROM rooms ORDER BY name');
     const summaries = await Promise.all(rooms.map(buildRoomSummary));
     res.json({ ok: true, rooms: summaries });
@@ -78,6 +80,8 @@ router.get('/', async (req, res) => {
 
 router.get('/:id/status', async (req, res) => {
   try {
+    await reconciliarPausasVencidas();
+
     const room = await db.get('SELECT * FROM rooms WHERE id = ?', [req.params.id]);
     if (!room) return res.status(404).json({ ok: false, error: 'Sala não encontrada' });
 
@@ -86,7 +90,7 @@ router.get('/:id/status', async (req, res) => {
 
     let students = [];
     if (summary.has_class_now) {
-      const rows = await db.all(
+      const rowsData = await db.all(
         `SELECT p.id, p.name, p.registration, a.status, a.check_in_time
          FROM class_students cs
          JOIN people p ON p.id = cs.person_id
@@ -95,7 +99,7 @@ router.get('/:id/status', async (req, res) => {
          ORDER BY p.name`,
         [date, summary.schedule_id]
       );
-      students = rows.map((s) => ({ ...s, status: s.status || 'ausente' }));
+      students = rowsData.map((s) => ({ ...s, status: s.status || 'ausente' }));
     }
 
     const openBreaks = await db.all(

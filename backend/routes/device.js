@@ -11,8 +11,8 @@ const {
   getRoomByToken,
   logEvent,
 } = require('../utils');
+const { reconciliarPausasVencidas } = require('../reconciliacao');
 
-// Toda requisição do dispositivo deve trazer device_token (identifica a sala/ESP32)
 async function requireRoom(req, res, next) {
   const room = await getRoomByToken(req.body.device_token);
   if (!room) return res.status(401).json({ ok: false, error: 'device_token inválido' });
@@ -20,9 +20,10 @@ async function requireRoom(req, res, next) {
   next();
 }
 
-// -------- CHECK-IN (cartão passado na entrada da sala) --------
 router.post('/checkin', requireRoom, async (req, res) => {
   try {
+    await reconciliarPausasVencidas();
+
     const { card_id } = req.body;
     const room = req.room;
     const person = await findPersonByCard(card_id);
@@ -93,7 +94,6 @@ router.post('/checkin', requireRoom, async (req, res) => {
   }
 });
 
-// -------- INÍCIO DE PAUSA (banheiro / água) --------
 router.post('/break/start', requireRoom, async (req, res) => {
   try {
     const { card_id, type } = req.body;
@@ -113,9 +113,10 @@ router.post('/break/start', requireRoom, async (req, res) => {
 
     const limit = BREAK_LIMITS[type];
     const time = nowTimeStr();
+    const date = todayDateStr();
     const result = await db.run(
-      `INSERT INTO breaks (person_id, room_id, type, start_time, limit_seconds) VALUES (?,?,?,?,?)`,
-      [person.id, room.id, type, time, limit]
+      `INSERT INTO breaks (person_id, room_id, type, date, start_time, limit_seconds) VALUES (?,?,?,?,?,?)`,
+      [person.id, room.id, type, date, time, limit]
     );
 
     await logEvent(person.id, room.id, card_id, 'break_start', type);
@@ -132,7 +133,6 @@ router.post('/break/start', requireRoom, async (req, res) => {
   }
 });
 
-// -------- FIM DE PAUSA (retorno à sala) --------
 router.post('/break/end', requireRoom, async (req, res) => {
   try {
     const { card_id } = req.body;
@@ -165,9 +165,10 @@ router.post('/break/end', requireRoom, async (req, res) => {
   }
 });
 
-// -------- DADOS PARA IMPRESSÃO (botão do professor no dispositivo) --------
 router.post('/print-data', requireRoom, async (req, res) => {
   try {
+    await reconciliarPausasVencidas();
+
     const room = req.room;
     const schedule = await getActiveScheduleForRoom(room.id);
     if (!schedule) return res.status(409).json({ ok: false, error: 'Nenhuma aula ativa nesta sala agora' });
